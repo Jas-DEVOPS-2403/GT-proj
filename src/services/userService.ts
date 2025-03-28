@@ -10,6 +10,15 @@ class UserService {
   getUsers(): User[] {
     return this.users;
   }
+
+  createUser(userData: Omit<User, 'id'>): User {
+    const newUser = {
+      id: (this.users.length + 1).toString(),
+      ...userData,
+    };
+    this.users.push(newUser);
+    return newUser;
+  }
 }
 
 export const userService = new UserService(); 
