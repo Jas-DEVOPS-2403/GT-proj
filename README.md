@@ -10,6 +10,9 @@ A RESTful API built with Express and TypeScript, implementing user management wi
 - Page size support
 - TypeScript for type safety
 - Modular architecture
+- CSV file upload support
+- Automatic data validation
+- Database persistence with Prisma
 
 ## API Endpoints
 
@@ -24,7 +27,7 @@ Retrieves a list of users with optional filtering, sorting, and page size.
 | min       | number  | 0.0        | Minimum salary filter                          |
 | max       | number  | 4000.0     | Maximum salary filter                          |
 | offset    | number  | 0          | Number of records to skip                      |
-| pageSize  | number  | optional   | Maximum number of records to return            |
+| limit     | number  | 10         | Maximum number of records to return            |
 | sort      | string  | optional   | Sort field (NAME or SALARY)                    |
 
 #### Example Requests
@@ -49,55 +52,59 @@ GET http://localhost:3000/api/users?sort=SALARY
 GET http://localhost:3000/api/users?sort=NAME
 ```
 
-5. Use page size:
+5. Use pagination:
 ```
-GET http://localhost:3000/api/users?pageSize=2
+GET http://localhost:3000/api/users?offset=0&limit=5
 ```
 
 6. Combine filters:
 ```
-GET http://localhost:3000/api/users?min=2500&max=3000&sort=SALARY&pageSize=2
+GET http://localhost:3000/api/users?min=2500&max=3000&sort=SALARY&limit=5
 ```
 
 #### Response Format
 ```json
 {
-  "success": true,
-  "data": [
+  "results": [
     {
-      "id": "1",
       "name": "John Doe",
       "salary": 2500
     }
-  ],
-  "total": 1,
-  "offset": 0,
-  "pageSize": 2
+  ]
 }
 ```
 
-### POST /api/users
+### POST /upload
 
-Creates a new user.
+Uploads a CSV file containing user data.
 
-#### Request Body
-```json
-{
-  "name": "John Doe",
-  "salary": 2500
-}
+#### Request Format
+- Content-Type: multipart/form-data
+- File field name: "file"
+- File type: CSV
+
+#### CSV Format
+```csv
+name,salary
+John Doe,2500
+Jane Smith,3000
 ```
 
 #### Response Format
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "1",
-    "name": "John Doe",
-    "salary": 2500
-  },
-  "message": "User created successfully"
+  "success": 1,
+  "message": "Processed 2 records successfully",
+  "processedRecords": [
+    {
+      "name": "John Doe",
+      "salary": 2500
+    },
+    {
+      "name": "Jane Smith",
+      "salary": 3000
+    }
+  ]
 }
 ```
 
@@ -108,7 +115,12 @@ Creates a new user.
 npm install
 ```
 
-2. Start the development server:
+2. Set up the database:
+```bash
+npx prisma migrate reset --force
+```
+
+3. Start the development server:
 ```bash
 npm run dev
 ```
@@ -131,7 +143,10 @@ src/
 - Node.js
 - Express
 - TypeScript
+- Prisma (SQLite)
 - Nodemon (for development)
+- Multer (for file uploads)
+- CSV Parser
 
 ## Development
 
@@ -141,6 +156,8 @@ The project uses:
 - CORS for handling cross-origin requests
 - dotenv for environment variable management
 - nodemon for development hot-reloading
+- Prisma for database operations
+- Multer for file upload handling
 
 ## Available Scripts
 
@@ -149,41 +166,10 @@ The project uses:
 - `npm start`: Start the production server
 - `npm test`: Run tests (when implemented)
 
-## Project Structure
-
-```
-src/
-  ├── index.ts          # Main application entry point
-  ├── routes/           # Route definitions
-  ├── controllers/      # Route controllers
-  ├── middleware/       # Custom middleware
-  ├── models/          # Data models
-  └── services/        # Business logic
-```
-
-# CSV Upload API
-
-A TypeScript Express API that handles CSV file uploads for user salary data.
-
-## Setup and Installation
-
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Set up the database:
-   ```bash
-   npx prisma migrate reset --force
-   ```
-4. Start the server:
-   ```bash
-   npm run dev
-   ```
-
 ## Testing Guide
 
 ### 1. Basic API Functionality
+- Visit `http://localhost:3000` to access the CSV upload interface
 - Visit `http://localhost:3000/api/users` to view all users
 - Visit `http://localhost:5555` to access Prisma Studio (database viewer)
 
@@ -247,11 +233,4 @@ A TypeScript Express API that handles CSV file uploads for user salary data.
    - No records should be saved
    - Error message should be displayed
    - Database should remain unchanged
-   - `/api/users` endpoint should return original data
-
-## Technical Details
-- Built with TypeScript and Express
-- Uses Prisma with SQLite database
-- Implements proper error handling
-- Supports concurrent uploads
-- Validates CSV structure and data 
+   - `/api/users` endpoint should return original data 

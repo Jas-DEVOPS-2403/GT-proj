@@ -91,8 +91,32 @@ interface MulterRequest extends Request {
     file?: Express.Multer.File;
 }
 
-// File upload endpoint
+/**
+ * File Upload Endpoint
+ * 
+ * Handles CSV file uploads, validates the data, and updates the database.
+ * 
+ * Implementation Approach:
+ * 1. Accept CSV file upload using multer
+ * 2. Validate file format and content
+ * 3. Process valid records
+ * 4. Update database with new/updated records
+ * 5. Clean up temporary files
+ * 
+ * Technical Decisions:
+ * - Using multer for file upload handling
+ * - CSV parsing with csv-parser package
+ * - Automatic file cleanup after processing
+ * - Transaction-like behavior for data consistency
+ * 
+ * Assumptions:
+ * 1. CSV files have name and salary columns
+ * 2. Salaries are non-negative numbers
+ * 3. Names are unique identifiers
+ * 4. Files are properly formatted CSV
+ */
 app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Response) => {
+    // Validate file presence
     if (!req.file) {
         return res.status(400).json({ success: 0, error: 'No file uploaded' });
     }
@@ -171,12 +195,32 @@ app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Respo
     }
 });
 
-// Health check endpoint for monitoring
+/**
+ * Health Check Endpoint
+ * 
+ * Simple endpoint to verify the API is running and responsive.
+ * Used for monitoring and deployment verification.
+ */
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
-// Global error handling middleware
+/**
+ * Global Error Handler
+ * 
+ * Catches any unhandled errors in the application and returns
+ * a consistent error response format.
+ * 
+ * Implementation Approach:
+ * 1. Log error details for debugging
+ * 2. Return standardized error response
+ * 3. Set appropriate HTTP status code
+ * 
+ * Technical Decisions:
+ * - Using 500 status for server errors
+ * - Including error message in response
+ * - Logging errors for debugging
+ */
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ 
