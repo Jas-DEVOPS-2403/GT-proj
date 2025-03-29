@@ -41,26 +41,12 @@ app.use(cors());  // Enable CORS for all routes
 app.use(express.json());  // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 
-// Add JSON formatting middleware
+// Enable pretty printing
+app.set('json spaces', 2);
+
+// Add response header middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  // Store the original json method
-  const originalJson = res.json;
-  
-  // Override the json method
-  res.json = function(data: any) {
-    // If the data is already a string, parse it
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data);
-      } catch (e) {
-        // If parsing fails, keep the original string
-      }
-    }
-    
-    // Format the response with proper spacing
-    return originalJson.call(this, JSON.stringify(data, null, 2));
-  };
-  
+  res.setHeader('Content-Type', 'application/json');
   next();
 });
 
