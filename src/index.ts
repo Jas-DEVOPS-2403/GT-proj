@@ -70,7 +70,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.json = function(data) {
         // Format the data with 2-space indentation
         const formattedData = JSON.stringify(data, null, 2);
-        return originalJson.call(this, JSON.parse(formattedData));
+        // Set the content type to ensure proper formatting
+        res.setHeader('Content-Type', 'application/json');
+        // Send the formatted data
+        return res.send(formattedData);
     };
     next();
 });
@@ -179,9 +182,12 @@ app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Respo
 
         // Return formatted response
         res.json({ 
-            success: 1,
-            message: `Processed ${results.length} records successfully`,
-            processedRecords: results
+            success: true,
+            data: {
+                message: `Processed ${results.length} records successfully`,
+                processedRecords: results,
+                total: results.length
+            }
         });
     } catch (error) {
         // Clean up the uploaded file in case of error
@@ -189,8 +195,8 @@ app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Respo
             fs.unlinkSync(req.file.path);
         }
         res.status(400).json({ 
-            success: 0, 
-            error: error instanceof Error ? error.message : 'Failed to process file' 
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to process file'
         });
     }
 });

@@ -90,12 +90,23 @@ export class UserController {
             take: query.limit || 10     // Default limit is 10 records
         });
 
-        // Return formatted response with only name and salary
+        // Return formatted response with metadata
         return {
-            results: users.map((user: User) => ({
-                name: user.name,
-                salary: user.salary
-            }))
+            success: true,
+            data: {
+                users: users.map((user: User) => ({
+                    name: user.name,
+                    salary: user.salary
+                })),
+                total: users.length,
+                filters: {
+                    min: query.min || 0,
+                    max: query.max || 4000,
+                    sort: query.sort || 'none',
+                    offset: query.offset || 0,
+                    limit: query.limit || 10
+                }
+            }
         };
     }
 } 
