@@ -41,6 +41,29 @@ app.use(cors());  // Enable CORS for all routes
 app.use(express.json());  // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 
+// Add JSON formatting middleware
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Store the original json method
+  const originalJson = res.json;
+  
+  // Override the json method
+  res.json = function(data: any) {
+    // If the data is already a string, parse it
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch (e) {
+        // If parsing fails, keep the original string
+      }
+    }
+    
+    // Format the response with proper spacing
+    return originalJson.call(this, JSON.stringify(data, null, 2));
+  };
+  
+  next();
+});
+
 // Register routes
 app.use('/api', userRoutes);  // Mount user routes under /api prefix
 
@@ -52,7 +75,11 @@ app.get('/health', (req: Request, res: Response) => {
 // Global error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  res.status(500).json({ 
+    success: false,
+    error: 'Something went wrong!',
+    data: null
+  });
 });
 
 // Start the server
