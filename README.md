@@ -1,13 +1,13 @@
 # Express TypeScript API
 
-A RESTful API built with Express and TypeScript, implementing user management with filtering, sorting, and pagination.
+A RESTful API built with Express and TypeScript, implementing user management with filtering, sorting, and page size.
 
 ## Features
 
 - User management (create, read)
 - Filter users by salary range
 - Sort users by name or salary
-- Response support
+- Page size support
 - TypeScript for type safety
 - Modular architecture
 
@@ -15,7 +15,7 @@ A RESTful API built with Express and TypeScript, implementing user management wi
 
 ### GET /api/users
 
-Retrieves a list of users, with support for filtering, sorting, and loading results in pages.
+Retrieves a list of users with optional filtering, sorting, and page size.
 
 #### Query Parameters
 
@@ -24,12 +24,39 @@ Retrieves a list of users, with support for filtering, sorting, and loading resu
 | min       | number  | 0.0        | Minimum salary filter                          |
 | max       | number  | 4000.0     | Maximum salary filter                          |
 | offset    | number  | 0          | Number of records to skip                      |
-| limit     | number  | optional   | Maximum number of records to return            |
+| pageSize  | number  | optional   | Maximum number of records to return            |
 | sort      | string  | optional   | Sort field (NAME or SALARY)                    |
 
-#### Example Request
+#### Example Requests
+
+1. Get all users:
 ```
-GET /api/users?min=1000&max=3000&offset=0&limit=10&sort=SALARY
+GET http://localhost:3000/api/users
+```
+
+2. Filter by salary range:
+```
+GET http://localhost:3000/api/users?min=2500&max=3000
+```
+
+3. Sort by salary:
+```
+GET http://localhost:3000/api/users?sort=SALARY
+```
+
+4. Sort by name:
+```
+GET http://localhost:3000/api/users?sort=NAME
+```
+
+5. Use page size:
+```
+GET http://localhost:3000/api/users?pageSize=2
+```
+
+6. Combine filters:
+```
+GET http://localhost:3000/api/users?min=2500&max=3000&sort=SALARY&pageSize=2
 ```
 
 #### Response Format
@@ -45,7 +72,7 @@ GET /api/users?min=1000&max=3000&offset=0&limit=10&sort=SALARY
   ],
   "total": 1,
   "offset": 0,
-  "limit": 10
+  "pageSize": 2
 }
 ```
 

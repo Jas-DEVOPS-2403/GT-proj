@@ -26,21 +26,63 @@
 // Import required types and service
 import { Request, Response } from 'express';
 import { userService } from '../services/userService';
-import { User, ListResponse, SingleResponse } from '../types';
+import { User, ListResponse, SingleResponse, UserQueryParams } from '../types';
 
 // Get all users with optional filtering and sorting
 export const getUsers = (req: Request, res: Response) => {
   try {
+    // Extract and validate query parameters
+    const params: UserQueryParams = {
+      min: req.query.min ? Number(req.query.min) : undefined,
+      max: req.query.max ? Number(req.query.max) : undefined,
+      offset: req.query.offset ? Number(req.query.offset) : undefined,
+      pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
+      sort: req.query.sort as 'NAME' | 'SALARY' | undefined
+    };
+
+    // Validate numeric parameters
+    if (params.min !== undefined && isNaN(params.min)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid min parameter',
+        data: null
+      } as SingleResponse<null>);
+    }
+
+    if (params.max !== undefined && isNaN(params.max)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid max parameter',
+        data: null
+      } as SingleResponse<null>);
+    }
+
+    if (params.offset !== undefined && isNaN(params.offset)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid offset parameter',
+        data: null
+      } as SingleResponse<null>);
+    }
+
+    if (params.pageSize !== undefined && isNaN(params.pageSize)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid pageSize parameter',
+        data: null
+      } as SingleResponse<null>);
+    }
+
     // Get users from service layer
-    const users = userService.getUsers();
+    const { users, total } = userService.getUsers(params);
     
     // Format response according to API specification
     const response: ListResponse<User> = {
       success: true,
       data: users,
-      total: users.length,
-      offset: 0,
-      limit: users.length
+      total,
+      offset: params.offset || 0,
+      pageSize: params.pageSize
     };
     
     res.json(response);

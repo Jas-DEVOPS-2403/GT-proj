@@ -23,29 +23,58 @@
  * 4. No duplicate names allowed
  */
 
-// Import User type definition
-import { User } from '../types';
+import { User, UserQueryParams } from '../types';
 
 class UserService {
-  // In-memory storage for users with sample data
-  private users: User[] = [
-    { id: '1', name: 'John Doe', salary: 50000 },
-    { id: '2', name: 'Jane Smith', salary: 75000 },
-    { id: '3', name: 'Bob Johnson', salary: 65000 },
-  ];
+  // In-memory storage for users
+  private users: User[] = [];
+  private nextId: number = 1;
 
-  // Get all users from storage
-  getUsers(): User[] {
-    return this.users;
+  // Get all users with filtering, sorting, and page size
+  getUsers(params: UserQueryParams = {}): { users: User[], total: number } {
+    let filteredUsers = [...this.users];
+
+    // Apply salary filtering
+    if (params.min !== undefined) {
+      filteredUsers = filteredUsers.filter(user => user.salary >= params.min!);
+    }
+    if (params.max !== undefined) {
+      filteredUsers = filteredUsers.filter(user => user.salary <= params.max!);
+    }
+
+    // Apply sorting
+    if (params.sort) {
+      filteredUsers.sort((a, b) => {
+        if (params.sort === 'NAME') {
+          return a.name.localeCompare(b.name);
+        } else if (params.sort === 'SALARY') {
+          return a.salary - b.salary;
+        }
+        return 0;
+      });
+    }
+
+    // Apply page size
+    const offset = params.offset || 0;
+    const pageSize = params.pageSize;
+    const paginatedUsers = pageSize 
+      ? filteredUsers.slice(offset, offset + pageSize)
+      : filteredUsers.slice(offset);
+
+    return {
+      users: paginatedUsers,
+      total: filteredUsers.length
+    };
   }
 
   // Create a new user with auto-generated ID
   createUser(userData: Omit<User, 'id'>): User {
     const newUser: User = {
-      id: (this.users.length + 1).toString(), // Generate new ID
+      id: this.nextId.toString(),
       ...userData
     };
-    this.users.push(newUser); // Add to storage
+    this.users.push(newUser);
+    this.nextId++;
     return newUser;
   }
 }

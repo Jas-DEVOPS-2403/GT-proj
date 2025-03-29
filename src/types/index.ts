@@ -35,27 +35,27 @@ export interface User {
 /**
  * Query Parameters Interface
  * 
- * Defines the structure of query parameters for user filtering and pagination.
+ * Defines the structure of query parameters for user filtering and page size.
  */
 export interface UserQueryParams {
   min?: number;    // Minimum salary filter (default: 0.0)
   max?: number;    // Maximum salary filter (default: 4000.0)
   offset?: number; // Number of records to skip (default: 0)
-  limit?: number;  // Maximum number of records to return
+  pageSize?: number;  // Maximum number of records to return
   sort?: 'NAME' | 'SALARY'; // Sort field
 }
 
 /**
  * List Response Interface
  * 
- * Defines the structure of list API responses with pagination.
+ * Defines the structure of list API responses with page size.
  */
 export interface ListResponse<T> {
   success: boolean;    // Indicates if the request was successful
   data: T[];          // Array of items for the current page
   total: number;      // Total number of items
   offset: number;     // Current offset
-  limit?: number;     // Maximum number of items per page
+  pageSize?: number;  // Maximum number of items per page
 }
 
 /**
