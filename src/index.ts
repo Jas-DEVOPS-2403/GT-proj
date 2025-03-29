@@ -61,6 +61,20 @@ app.use(cors());  // Enable CORS for all routes
 app.use(express.json());  // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 
+/**
+ * Middleware to format JSON responses with proper indentation
+ * This ensures all JSON responses are human-readable
+ */
+app.use((req: Request, res: Response, next: NextFunction) => {
+    const originalJson = res.json;
+    res.json = function(data) {
+        // Format the data with 2-space indentation
+        const formattedData = JSON.stringify(data, null, 2);
+        return originalJson.call(this, JSON.parse(formattedData));
+    };
+    next();
+});
+
 // Remove the Content-Type: application/json header for non-API routes
 app.use('/api', (req: Request, res: Response, next: NextFunction) => {
     res.setHeader('Content-Type', 'application/json');
@@ -139,6 +153,7 @@ app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Respo
         // Clean up the uploaded file
         fs.unlinkSync(filePath);
 
+        // Return formatted response
         res.json({ 
             success: 1,
             message: `Processed ${results.length} records successfully`,
