@@ -30,6 +30,18 @@ class UserService {
   private users: User[] = [];
   private nextId: number = 1;
 
+  constructor() {
+    // Pre-load test data
+    this.users = [
+      { id: '1', name: 'Alex', salary: 3000.0 },
+      { id: '2', name: 'Bryan', salary: 3500.0 },
+      { id: '3', name: 'Charlie', salary: 2500.0 },
+      { id: '4', name: 'David', salary: 4000.0 },
+      { id: '5', name: 'Emma', salary: 2800.0 }
+    ];
+    this.nextId = this.users.length + 1;
+  }
+
   // Get all users with filtering, sorting, and page size
   getUsers(params: UserQueryParams = {}): { users: User[], total: number } {
     let filteredUsers = [...this.users];

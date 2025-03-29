@@ -28,6 +28,10 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
+import multer, { FileFilterCallback } from 'multer';
+import path from 'path';
+import fs from 'fs';
+import csv from 'csv-parser';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -36,22 +40,84 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+// Configure multer for file upload
+const upload = multer({
+    dest: 'uploads/',
+    fileFilter: (req: Express.Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        if (file.mimetype === 'text/csv') {
+            cb(null, true);
+        } else {
+            cb(new Error('Only CSV files are allowed'));
+        }
+    }
+});
+
 // Set up middleware
 app.use(cors());  // Enable CORS for all routes
 app.use(express.json());  // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true }));  // Parse URL-encoded bodies
 
-// Enable pretty printing
-app.set('json spaces', 2);
-
-// Add response header middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Content-Type', 'application/json');
-  next();
+// Remove the Content-Type: application/json header for non-API routes
+app.use('/api', (req: Request, res: Response, next: NextFunction) => {
+    res.setHeader('Content-Type', 'application/json');
+    next();
 });
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Register routes
 app.use('/api', userRoutes);  // Mount user routes under /api prefix
+
+interface MulterRequest extends Request {
+    file?: Express.Multer.File;
+}
+
+// File upload endpoint
+app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Response) => {
+    if (!req.file) {
+        return res.status(400).json({ success: 0, error: 'No file uploaded' });
+    }
+
+    try {
+        const results: any[] = [];
+        const filePath = req.file.path;
+
+        // Read and validate CSV file
+        await new Promise((resolve, reject) => {
+            fs.createReadStream(filePath)
+                .pipe(csv())
+                .on('data', (data: any) => {
+                    // Validate each row here
+                    // For example, check if required fields exist
+                    if (!data.name || !data.salary) {
+                        reject(new Error('Invalid CSV format: missing required fields'));
+                    }
+                    results.push(data);
+                })
+                .on('end', resolve)
+                .on('error', reject);
+        });
+
+        // If validation passes, update the database
+        // This is where you would update your user data
+        // For now, we'll just return success
+
+        // Clean up the uploaded file
+        fs.unlinkSync(filePath);
+
+        res.json({ success: 1 });
+    } catch (error) {
+        // Clean up the uploaded file in case of error
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
+        res.status(400).json({ 
+            success: 0, 
+            error: error instanceof Error ? error.message : 'Failed to process file' 
+        });
+    }
+});
 
 // Health check endpoint for monitoring
 app.get('/health', (req: Request, res: Response) => {

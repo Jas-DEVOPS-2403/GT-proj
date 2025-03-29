@@ -38,9 +38,9 @@ export interface User {
  * Defines the structure of query parameters for user filtering and page size.
  */
 export interface UserQueryParams {
-  min?: number;    // Minimum salary filter (default: 0.0)
-  max?: number;    // Maximum salary filter (default: 4000.0)
-  offset?: number; // Number of records to skip (default: 0)
+  min?: number;    // Minimum salary filter
+  max?: number;    // Maximum salary filter
+  offset?: number; // Number of records to skip
   pageSize?: number;  // Maximum number of records to return
   sort?: 'NAME' | 'SALARY'; // Sort field
 }
