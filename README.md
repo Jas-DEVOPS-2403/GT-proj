@@ -90,24 +90,6 @@ John Doe,2500
 Jane Smith,3000
 ```
 
-#### Response Format
-```json
-{
-  "success": 1,
-  "message": "Processed 2 records successfully",
-  "processedRecords": [
-    {
-      "name": "John Doe",
-      "salary": 2500
-    },
-    {
-      "name": "Jane Smith",
-      "salary": 3000
-    }
-  ]
-}
-```
-
 ## Setup
 
 1. Install dependencies:
