@@ -52,7 +52,7 @@ GET http://localhost:3000/api/users?sort=SALARY
 GET http://localhost:3000/api/users?sort=NAME
 ```
 
-5. Use pagination:
+5. Use limitors:
 ```
 GET http://localhost:3000/api/users?offset=0&limit=5
 ```
