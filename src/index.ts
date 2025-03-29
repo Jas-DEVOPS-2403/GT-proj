@@ -32,9 +32,13 @@ import multer, { FileFilterCallback } from 'multer';
 import path from 'path';
 import fs from 'fs';
 import csv from 'csv-parser';
+import { PrismaClient } from '@prisma/client';
 
 // Load environment variables from .env file
 dotenv.config();
+
+// Initialize Prisma client
+const prisma = new PrismaClient();
 
 // Initialize Express application
 const app: Express = express();
@@ -88,25 +92,58 @@ app.post('/upload', upload.single('file'), async (req: MulterRequest, res: Respo
             fs.createReadStream(filePath)
                 .pipe(csv())
                 .on('data', (data: any) => {
-                    // Validate each row here
-                    // For example, check if required fields exist
+                    // Validate each row
                     if (!data.name || !data.salary) {
                         reject(new Error('Invalid CSV format: missing required fields'));
                     }
-                    results.push(data);
+                    
+                    // Convert salary to number and validate
+                    const salary = parseFloat(data.salary);
+                    if (isNaN(salary)) {
+                        reject(new Error('Invalid salary format'));
+                    }
+                    
+                    // Only process rows with non-negative salaries
+                    if (salary >= 0) {
+                        results.push({
+                            name: data.name,
+                            salary: salary
+                        });
+                    }
                 })
                 .on('end', resolve)
                 .on('error', reject);
         });
 
-        // If validation passes, update the database
-        // This is where you would update your user data
-        // For now, we'll just return success
+        // Process the valid results
+        for (const user of results) {
+            // Check if user exists
+            const existingUser = await prisma.user.findFirst({
+                where: { name: user.name }
+            });
+
+            if (existingUser) {
+                // Update existing user
+                await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: { salary: user.salary }
+                });
+            } else {
+                // Create new user
+                await prisma.user.create({
+                    data: user
+                });
+            }
+        }
 
         // Clean up the uploaded file
         fs.unlinkSync(filePath);
 
-        res.json({ success: 1 });
+        res.json({ 
+            success: 1,
+            message: `Processed ${results.length} records successfully`,
+            processedRecords: results
+        });
     } catch (error) {
         // Clean up the uploaded file in case of error
         if (req.file) {

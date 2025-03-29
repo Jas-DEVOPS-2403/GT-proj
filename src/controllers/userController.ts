@@ -29,7 +29,7 @@ import { userService } from '../services/userService';
 import { User, ListResponse, SingleResponse, UserQueryParams } from '../types';
 
 // Get all users with optional filtering and sorting
-export const getUsers = (req: Request, res: Response) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
     // Extract and validate query parameters
     const params: UserQueryParams = {
@@ -74,7 +74,7 @@ export const getUsers = (req: Request, res: Response) => {
     }
 
     // Get users from service layer
-    const { users, total } = userService.getUsers(params);
+    const { users, total } = await userService.getUsers(params);
     
     // Format response according to API specification
     const response: ListResponse<User> = {
@@ -99,7 +99,7 @@ export const getUsers = (req: Request, res: Response) => {
 };
 
 // Create a new user
-export const createUser = (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response) => {
   try {
     // Extract and validate request body data
     const { name, salary } = req.body;
@@ -123,7 +123,7 @@ export const createUser = (req: Request, res: Response) => {
     }
 
     // Create user through service layer
-    const newUser = userService.createUser({ name, salary });
+    const newUser = await userService.createUser({ name, salary });
     
     // Return success response with created user
     const response: SingleResponse<User> = {
